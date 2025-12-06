@@ -36,7 +36,9 @@ document.addEventListener("DOMContentLoaded", () => {
               .slice(0, 2)
               .toUpperCase();
 
-            participantsHTML += `<li><span class="avatar">${initials}</span><span class="participant-name">${p}</span></li>`;
+            // Add a delete button next to each participant. The button has
+            // data attributes we can use when handling the click event.
+            participantsHTML += `<li><span class="avatar">${initials}</span><span class="participant-name">${p}</span><button class="delete-btn" data-activity="${name}" data-email="${p}" title="Unregister">✖</button></li>`;
           });
           participantsHTML += "</ul>";
         } else {
@@ -65,6 +67,46 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error fetching activities:", error);
     }
   }
+
+  // Event delegation: handle clicks on delete buttons to unregister a participant
+  activitiesList.addEventListener("click", async (e) => {
+    if (!e.target.classList.contains("delete-btn")) return;
+
+    const btn = e.target;
+    const activity = btn.dataset.activity;
+    const email = btn.dataset.email;
+
+    if (!activity || !email) return;
+
+    if (!confirm(`Unregister ${email} from ${activity}?`)) return;
+
+    try {
+      const resp = await fetch(`/activities/${encodeURIComponent(activity)}/unregister?email=${encodeURIComponent(email)}`, {
+        method: "DELETE",
+      });
+
+      const result = await resp.json().catch(() => ({}));
+
+      if (resp.ok) {
+        // Remove the participant entry from the DOM
+        const li = btn.closest("li");
+        if (li) li.remove();
+        messageDiv.textContent = result.message || "Participant unregistered";
+        messageDiv.className = "success";
+        messageDiv.classList.remove("hidden");
+        setTimeout(() => messageDiv.classList.add("hidden"), 4000);
+      } else {
+        messageDiv.textContent = result.detail || "Failed to unregister participant";
+        messageDiv.className = "error";
+        messageDiv.classList.remove("hidden");
+      }
+    } catch (err) {
+      console.error("Error unregistering participant:", err);
+      messageDiv.textContent = "Network error while unregistering";
+      messageDiv.className = "error";
+      messageDiv.classList.remove("hidden");
+    }
+  });
 
   // Handle form submission
   signupForm.addEventListener("submit", async (event) => {
