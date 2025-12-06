@@ -88,9 +88,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await resp.json().catch(() => ({}));
 
       if (resp.ok) {
-        // Remove the participant entry from the DOM
-        const li = btn.closest("li");
-        if (li) li.remove();
+        // Refresh the activities UI so availability and lists update
+        await fetchActivities();
         messageDiv.textContent = result.message || "Participant unregistered";
         messageDiv.className = "success";
         messageDiv.classList.remove("hidden");
@@ -129,6 +128,8 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+        // Refresh the activities UI so the new participant appears immediately
+        await fetchActivities();
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
