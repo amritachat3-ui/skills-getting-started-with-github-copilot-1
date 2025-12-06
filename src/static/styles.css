@@ -74,6 +74,87 @@ section h3 {
   margin-bottom: 8px;
 }
 
+/* New: participants section inside activity cards */
+.participants {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px dashed #eee;
+}
+
+.participants h5 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+/* Make the participants list compact and pretty */
+.participants ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+  display: block;
+}
+
+.participants li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #ffffff, #fbfbfd);
+  border: 1px solid #f0f0f5;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+/* Small circular avatar with initials */
+.participants .avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: #1a237e;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 12px;
+  flex: 0 0 28px;
+}
+
+/* Participant name styling */
+.participants .participant-name {
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Delete/unregister button next to participant */
+.participants .delete-btn {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: #c62828;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.participants .delete-btn:hover {
+  background: rgba(198,40,40,0.08);
+}
+
+/* Small helper message when no participants */
+.participants .info {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+  padding: 6px 0;
+}
+
 .form-group {
   margin-bottom: 15px;
 }

@@ -13,6 +13,9 @@ document.addEventListener("DOMContentLoaded", () => {
       // Clear loading message
       activitiesList.innerHTML = "";
 
+      // Reset activity select (keep the placeholder)
+      activitySelect.innerHTML = '<option value="">-- Select an activity --</option>';
+
       // Populate activities list
       Object.entries(activities).forEach(([name, details]) => {
         const activityCard = document.createElement("div");
@@ -20,11 +23,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const spotsLeft = details.max_participants - details.participants.length;
 
+        // Build participants HTML
+        let participantsHTML = '<div class="participants"><h5>Participants</h5>';
+        if (details.participants && details.participants.length) {
+          participantsHTML += "<ul>";
+          details.participants.forEach((p) => {
+            // Create initials for avatar (first letters of up to two words)
+            const initials = p
+              .split(" ")
+              .map((s) => s[0] || "")
+              .join("")
+              .slice(0, 2)
+              .toUpperCase();
+
+            // Add a delete button next to each participant. The button has
+            // data attributes we can use when handling the click event.
+            participantsHTML += `<li><span class="avatar">${initials}</span><span class="participant-name">${p}</span><button class="delete-btn" data-activity="${name}" data-email="${p}" title="Unregister">✖</button></li>`;
+          });
+          participantsHTML += "</ul>";
+        } else {
+          participantsHTML += '<p class="info">No participants yet</p>';
+        }
+        participantsHTML += "</div>";
+
         activityCard.innerHTML = `
           <h4>${name}</h4>
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          ${participantsHTML}
         `;
 
         activitiesList.appendChild(activityCard);
@@ -40,6 +67,45 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error fetching activities:", error);
     }
   }
+
+  // Event delegation: handle clicks on delete buttons to unregister a participant
+  activitiesList.addEventListener("click", async (e) => {
+    if (!e.target.classList.contains("delete-btn")) return;
+
+    const btn = e.target;
+    const activity = btn.dataset.activity;
+    const email = btn.dataset.email;
+
+    if (!activity || !email) return;
+
+    if (!confirm(`Unregister ${email} from ${activity}?`)) return;
+
+    try {
+      const resp = await fetch(`/activities/${encodeURIComponent(activity)}/unregister?email=${encodeURIComponent(email)}`, {
+        method: "DELETE",
+      });
+
+      const result = await resp.json().catch(() => ({}));
+
+      if (resp.ok) {
+        // Refresh the activities UI so availability and lists update
+        await fetchActivities();
+        messageDiv.textContent = result.message || "Participant unregistered";
+        messageDiv.className = "success";
+        messageDiv.classList.remove("hidden");
+        setTimeout(() => messageDiv.classList.add("hidden"), 4000);
+      } else {
+        messageDiv.textContent = result.detail || "Failed to unregister participant";
+        messageDiv.className = "error";
+        messageDiv.classList.remove("hidden");
+      }
+    } catch (err) {
+      console.error("Error unregistering participant:", err);
+      messageDiv.textContent = "Network error while unregistering";
+      messageDiv.className = "error";
+      messageDiv.classList.remove("hidden");
+    }
+  });
 
   // Handle form submission
   signupForm.addEventListener("submit", async (event) => {
@@ -62,6 +128,8 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+        // Refresh the activities UI so the new participant appears immediately
+        await fetchActivities();
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
